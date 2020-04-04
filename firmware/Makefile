@@ -62,7 +62,9 @@ Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_tim.c \
 Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_tim_ex.c \
 Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_uart.c \
 Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_uart_ex.c \
-Src/system_stm32f0xx.c  
+Src/system_stm32f0xx.c \
+Src/i2c_ext.c \
+Src/hp203b.c
 
 # ASM sources
 ASM_SOURCES =  \
