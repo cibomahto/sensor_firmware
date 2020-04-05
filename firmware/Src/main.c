@@ -37,6 +37,13 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+
+/* ADC internal channels related definitions */
+/* Internal voltage reference VrefInt */
+#define VREFINT_CAL_ADDR ((uint16_t*) (0x1FFFF7BAU)) /* Internal voltage reference, address of parameter VREFINT_CAL: VrefInt ADC raw data acquired at temperature 30 DegC (tolerance: +-5 DegC), Vref+ = 3.3 V (tolerance: +-10 mV). */
+#define VREFINT_CAL_VREF ( 3300U)                    /* Analog voltage reference (Vref+) value with which temperature sensor has been calibrated in production (tolerance: +-10 mV) (unit: mV). */
+
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -47,6 +54,12 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+
+uint16_t adc_raw[2];
+volatile uint8_t adc_ch_index = 0;
+uint16_t vdda;
+uint16_t vfb;
+
 
 /* USER CODE END PV */
 
@@ -94,6 +107,8 @@ int main(void)
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 
+  HAL_ADCEx_Calibration_Start(&hadc);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -103,6 +118,9 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
+    HAL_ADC_Start_IT(&hadc);
+    HAL_Delay(1000);
   }
   /* USER CODE END 3 */
 }
@@ -154,6 +172,25 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+// CH0 (adc_raw[0]) : ADC_IN5, this is VFB
+// CH1 (adc_raw[1]) : Vrefint
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
+{
+  if (__HAL_ADC_GET_FLAG(hadc, ADC_FLAG_EOC))
+  {
+    adc_raw[adc_ch_index++] = HAL_ADC_GetValue(hadc);
+  }
+
+  if (__HAL_ADC_GET_FLAG(hadc, ADC_FLAG_EOS))
+  {
+    adc_ch_index = 0;
+    //HAL_ADC_Stop(hadc);
+    vdda = 3300 * (*VREFINT_CAL_ADDR) / adc_raw[1];
+    vfb = vdda * adc_raw[0] / 4095;
+  }
+}
+
 
 /* USER CODE END 4 */
 
