@@ -28,6 +28,11 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+#include "ssd1306_tests.h"
+#include "ssd1306.h"
+//#include <string.h>
+#include <stdio.h>
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -72,6 +77,15 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+void init() {
+    ssd1306_TestAll();
+}
+
+void loop() {
+	HAL_Delay(100);
+}
+
+
 /* USER CODE END 0 */
 
 /**
@@ -81,6 +95,7 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+  char buff[10] = "hello";
 
   /* USER CODE END 1 */
 
@@ -101,8 +116,8 @@ int main(void)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
-  MX_GPIO_Init();
-  MX_USART1_UART_Init();
+  //MX_GPIO_Init();
+  //MX_USART1_UART_Init();
   MX_ADC_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
@@ -113,8 +128,24 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
+  //init();
+  ssd1306_Init();
+  ssd1306_SetCursor(2, 0);
+#if 0
+  HAL_Delay(1000);
+  ssd1306_WriteString("Hello", Font_6x8, White);
+  ssd1306_UpdateScreen();
+#endif
+
   while (1)
   {
+    HAL_ADC_Start_IT(&hadc);
+    HAL_Delay(1000);
+    snprintf(buff, sizeof(buff), "%d", vfb);
+    ssd1306_SetCursor(2, 0);
+    ssd1306_WriteString(buff, Font_6x8, White);
+    ssd1306_UpdateScreen();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

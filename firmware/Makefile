@@ -63,8 +63,9 @@ Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_tim_ex.c \
 Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_uart.c \
 Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_uart_ex.c \
 Src/system_stm32f0xx.c \
-Src/i2c_ext.c \
-Src/hp203b.c
+Src/ssd1306/ssd1306.c \
+Src/ssd1306/ssd1306_fonts.c \
+Src/ssd1306/ssd1306_tests.c
 
 # ASM sources
 ASM_SOURCES =  \
@@ -113,7 +114,9 @@ AS_DEFS =
 # C defines
 C_DEFS =  \
 -DUSE_HAL_DRIVER \
--DSTM32F030x6
+-DSTM32F030x6 \
+-DSSD1306_USE_I2C \
+-DSTM32F0
 
 
 # AS includes
@@ -126,7 +129,8 @@ C_INCLUDES =  \
 -IDrivers/STM32F0xx_HAL_Driver/Inc/Legacy \
 -IDrivers/CMSIS/Device/ST/STM32F0xx/Include \
 -IDrivers/CMSIS/Include \
--IDrivers/CMSIS/Include
+-IDrivers/CMSIS/Include \
+-ISrc/ssd1306
 
 
 # compile gcc flags

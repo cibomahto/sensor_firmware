@@ -1,6 +1,7 @@
 #MicroXplorer Configuration settings - do not modify
+ADC.EOCSelection=ADC_EOC_SINGLE_CONV
 ADC.EnableAnalogWatchDog=false
-ADC.IPParameters=SamplingTime,EnableAnalogWatchDog
+ADC.IPParameters=SamplingTime,EnableAnalogWatchDog,EOCSelection
 ADC.SamplingTime=ADC_SAMPLETIME_239CYCLES_5
 File.Version=6
 GPIO.groupedBy=Group By Peripherals
