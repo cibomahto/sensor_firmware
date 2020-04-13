@@ -14,6 +14,10 @@ Optional tools:
 
     sudo apt install vim dos2unix
 
+For serial debuggets, add the user to dialout:
+
+    sudo usermod -a -G dialout matt
+
 ## Getting a fixed compiler version
 
 Using the '9-2019-q4-major' version from:
@@ -24,15 +28,35 @@ https://developer.arm.com/tools-and-software/open-source-software/developer-tool
     tar -xf gcc-arm-none-eabi-9-2019-q4-major-x86_64-linux.tar.bz2
     export PATH=~/gcc-arm-none-eabi-9-2019-q4-major/bin:$PATH
 
-## For expediency: use the built-in toolchain (not recommended)
-
-    sudo apt install gcc-arm-none-eabi gdb-multiarch
-
 ## Set up and build the firmware
 
     git clone https://github.com/ventilator-project/alarm_firmware
     cd alarm_firmware/firmware
     make
+
+## Load and debug with black magic device
+
+Add yourself to the dialout group, then restart:
+
+    sudo usermod -a -G dialout $1
+
+To load the firmware:
+
+    make flash-bm
+
+For a debugging session, launch gdb:
+
+    cd ~/sensor_firmware/firmware
+    arm-none-eabi-gdb
+
+And from gdb:
+
+    target extended-remote /dev/ttyACM0
+    monitor swdp_scan
+    attach 1
+    file build/sensor_firmware.elf
+    load
+    
 
 # Project generation
 
