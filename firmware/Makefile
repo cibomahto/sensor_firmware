@@ -39,8 +39,6 @@ C_SOURCES =  \
 Src/main.c \
 Src/gpio.c \
 Src/adc.c \
-Src/i2c.c \
-Src/usart.c \
 Src/stm32f0xx_it.c \
 Src/stm32f0xx_hal_msp.c \
 Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_adc.c \
@@ -60,12 +58,14 @@ Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_flash_ex.c \
 Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_exti.c \
 Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_tim.c \
 Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_tim_ex.c \
-Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_uart.c \
-Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_uart_ex.c \
 Src/system_stm32f0xx.c \
 Src/ssd1306/ssd1306.c \
 Src/ssd1306/ssd1306_fonts.c \
-Src/ssd1306/ssd1306_tests.c
+Src/ssd1306/ssd1306_tests.c \
+Src/i2c.c \
+Src/usart.c \
+Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_uart.c \
+Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_uart_ex.c
 
 # ASM sources
 ASM_SOURCES =  \

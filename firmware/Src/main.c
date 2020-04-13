@@ -28,9 +28,9 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
-#include "ssd1306_tests.h"
-#include "ssd1306.h"
-//#include <string.h>
+//#include "ssd1306_tests.h"
+//#include "ssd1306.h"
+#include <string.h>
 #include <stdio.h>
 
 /* USER CODE END Includes */
@@ -65,6 +65,15 @@ volatile uint8_t adc_ch_index = 0;
 uint16_t vdda;
 uint16_t vfb;
 
+typedef struct {
+    uint16_t SOF; // 0x5555
+    uint8_t version; // 0
+    uint8_t type; // Packet type: 0
+    uint16_t vfb; // ADC value
+    uint16_t pressure;
+    uint16_t temperature;
+    uint16_t crc; // TODO
+} __attribute__((__packed__)) message_packet_t;
 
 /* USER CODE END PV */
 
@@ -77,6 +86,7 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+#if 0
 void init() {
     ssd1306_TestAll();
 }
@@ -84,7 +94,7 @@ void init() {
 void loop() {
 	HAL_Delay(100);
 }
-
+#endif
 
 /* USER CODE END 0 */
 
@@ -95,7 +105,7 @@ void loop() {
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  char buff[10] = "hello";
+
 
   /* USER CODE END 1 */
 
@@ -116,10 +126,10 @@ int main(void)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
-  //MX_GPIO_Init();
-  //MX_USART1_UART_Init();
+  MX_GPIO_Init();
   MX_ADC_Init();
   MX_I2C1_Init();
+  MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
   HAL_ADCEx_Calibration_Start(&hadc);
@@ -129,10 +139,10 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
+#if 0
   //init();
   ssd1306_Init();
   ssd1306_SetCursor(2, 0);
-#if 0
   HAL_Delay(1000);
   ssd1306_WriteString("Hello", Font_6x8, White);
   ssd1306_UpdateScreen();
@@ -141,11 +151,24 @@ int main(void)
   while (1)
   {
     HAL_ADC_Start_IT(&hadc);
-    HAL_Delay(1000);
-    snprintf(buff, sizeof(buff), "%d", vfb);
+    HAL_Delay(2);
+
+    message_packet_t packet = {
+        .SOF = 0x5555,
+        .version = 0,
+        .type = 0,
+        .vfb = vfb,
+        .pressure = 0,
+        .temperature = 0,
+        .crc = 0,   // TODO
+    };
+    HAL_UART_Transmit(&huart1, (uint8_t *)&packet, sizeof(packet), 0xFFFF);
+
+#if 0
     ssd1306_SetCursor(2, 0);
     ssd1306_WriteString(buff, Font_6x8, White);
     ssd1306_UpdateScreen();
+#endif
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
