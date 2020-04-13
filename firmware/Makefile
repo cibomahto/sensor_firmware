@@ -39,6 +39,7 @@ C_SOURCES =  \
 Src/main.c \
 Src/gpio.c \
 Src/adc.c \
+Src/hp203b.c \
 Src/stm32f0xx_it.c \
 Src/stm32f0xx_hal_msp.c \
 Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_adc.c \
@@ -126,8 +127,7 @@ C_INCLUDES =  \
 -IDrivers/STM32F0xx_HAL_Driver/Inc/Legacy \
 -IDrivers/CMSIS/Device/ST/STM32F0xx/Include \
 -IDrivers/CMSIS/Include \
--IDrivers/CMSIS/Include \
--ISrc/ssd1306
+-IDrivers/CMSIS/Include
 
 
 # compile gcc flags

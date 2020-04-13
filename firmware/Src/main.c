@@ -30,6 +30,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include "hp203b.h"
 
 /* USER CODE END Includes */
 
@@ -68,8 +69,8 @@ typedef struct {
     uint8_t version; // 0
     uint8_t type; // Packet type: 0
     uint16_t vfb; // ADC value
-    uint16_t pressure;
-    uint16_t temperature;
+    uint32_t pressure;
+    uint32_t temperature;
     uint16_t crc; // TODO
 } __attribute__((__packed__)) message_packet_t;
 
@@ -137,18 +138,30 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
+  // Start an hp203b reset, then just wait for a while
+  hp203b_init();
+
   while (1)
   {
+    // Start a (single? ADC conversion)
     HAL_ADC_Start_IT(&hadc);
-    HAL_Delay(2);
+    //HAL_Delay(2);
+
+    uint32_t temperature = 0;
+    uint32_t pressure = 0;
+    if(hp203b_read_temp_pressure(&temperature, &pressure) != HP203B_ERROR_OK) {
+      // TODO: Errror handling
+      temperature = 0;
+      pressure = 0;
+    }
 
     message_packet_t packet = {
         .SOF = 0x5555,
         .version = 0,
         .type = 0,
         .vfb = vfb,
-        .pressure = 0,
-        .temperature = 0,
+        .pressure = pressure,
+        .temperature = temperature,
         .crc = 0,   // TODO
     };
     HAL_UART_Transmit(&huart1, (uint8_t *)&packet, sizeof(packet), 0xFFFF);
@@ -156,9 +169,6 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-
-    HAL_ADC_Start_IT(&hadc);
-    HAL_Delay(2);
   }
   /* USER CODE END 3 */
 }
@@ -213,17 +223,17 @@ void SystemClock_Config(void)
 
 // CH0 (adc_raw[0]) : ADC_IN5, this is VFB
 // CH1 (adc_raw[1]) : Vrefint
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hdl)
 {
-  if (__HAL_ADC_GET_FLAG(hadc, ADC_FLAG_EOC))
+  if (__HAL_ADC_GET_FLAG(hdl, ADC_FLAG_EOC))
   {
-    adc_raw[adc_ch_index++] = HAL_ADC_GetValue(hadc);
+    adc_raw[adc_ch_index++] = HAL_ADC_GetValue(hdl);
   }
 
-  if (__HAL_ADC_GET_FLAG(hadc, ADC_FLAG_EOS))
+  if (__HAL_ADC_GET_FLAG(hdl, ADC_FLAG_EOS))
   {
     adc_ch_index = 0;
-    //HAL_ADC_Stop(hadc);
+    //HAL_ADC_Stop(hdl);
     vdda = 3300 * (*VREFINT_CAL_ADDR) / adc_raw[1];
     vfb = vdda * adc_raw[0] / 4095;
   }
