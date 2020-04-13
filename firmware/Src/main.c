@@ -28,8 +28,6 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
-//#include "ssd1306_tests.h"
-//#include "ssd1306.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -139,15 +137,6 @@ int main(void)
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 
-#if 0
-  //init();
-  ssd1306_Init();
-  ssd1306_SetCursor(2, 0);
-  HAL_Delay(1000);
-  ssd1306_WriteString("Hello", Font_6x8, White);
-  ssd1306_UpdateScreen();
-#endif
-
   while (1)
   {
     HAL_ADC_Start_IT(&hadc);
@@ -164,17 +153,12 @@ int main(void)
     };
     HAL_UART_Transmit(&huart1, (uint8_t *)&packet, sizeof(packet), 0xFFFF);
 
-#if 0
-    ssd1306_SetCursor(2, 0);
-    ssd1306_WriteString(buff, Font_6x8, White);
-    ssd1306_UpdateScreen();
-#endif
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
 
     HAL_ADC_Start_IT(&hadc);
-    HAL_Delay(1000);
+    HAL_Delay(2);
   }
   /* USER CODE END 3 */
 }

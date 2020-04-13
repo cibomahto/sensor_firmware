@@ -59,9 +59,6 @@ Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_exti.c \
 Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_tim.c \
 Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_tim_ex.c \
 Src/system_stm32f0xx.c \
-Src/ssd1306/ssd1306.c \
-Src/ssd1306/ssd1306_fonts.c \
-Src/ssd1306/ssd1306_tests.c \
 Src/i2c.c \
 Src/usart.c \
 Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_uart.c \
@@ -146,6 +143,26 @@ endif
 # Generate dependency information
 CFLAGS += -MMD -MP -MF"$(@:%.o=%.d)"
 
+# Extra warnings
+CFLAGS += \
+    -Wall \
+    -Wextra \
+    -Wshadow \
+    -Wdouble-promotion \
+    -Wformat=2 \
+    -fno-common \
+    -Wconversion \
+    -Wsign-conversion \
+    -Wformat-security \
+    -fstack-protector-all \
+    -ftrapv \
+    -D_FORTIFY_SOURCE=2 -O2 \
+    -Wl,-z,relro,-z,now \
+    -Wl,-z,noexecstack \
+    -std=c11
+
+# -Werror 
+
 
 #######################################
 # LDFLAGS
@@ -204,6 +221,17 @@ flash: all
 	st-flash --reset write build/$(TARGET).bin 0x8000000
 erase:
 	st-flash --reset erase
+
+# Flash with Black Magic probe
+flash-bm: all
+	arm-none-eabi-gdb -nx --batch \
+  -ex 'target extended-remote /dev/ttyACM0' \
+  -ex 'monitor swdp_scan' \
+  -ex 'attach 1' \
+  -ex 'load' \
+  -ex 'compare-sections' \
+  -ex 'kill' \
+  $(BUILD_DIR)/$(TARGET).elf
 
 #######################################
 # dependencies
