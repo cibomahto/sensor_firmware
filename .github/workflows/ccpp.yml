@@ -1,0 +1,28 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out
+      uses: actions/checkout@v2
+    - name: arm-none-eabi-gcc 
+      uses: fiam/arm-none-eabi-gcc@v1
+      with:
+        release: '9-2019-q4' # The arm-none-eabi-gcc release to use.
+    - name: build firmware
+      run: make
+      working-directory: firmware
+    - name: Save bin
+      uses: actions/upload-artifact@v1
+      with:
+        name: elf
+        path: firmware/build/firmware.elf
