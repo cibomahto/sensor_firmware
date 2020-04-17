@@ -24,5 +24,4 @@ jobs:
     - name: Save bin
       uses: actions/upload-artifact@v1
       with:
-        name: firmware.elf
-        path: firmware/build/firmware.elf
+        path: firmware/build/sensor_firmware.elf
