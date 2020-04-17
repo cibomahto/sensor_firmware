@@ -1,4 +1,4 @@
-# Alarm board firmware
+# Sensor board firmware ![C/C++ CI](https://github.com/cibomahto/sensor_firmware/workflows/C/C++%20CI/badge.svg)
 
 Firmware for the [Ventilator sensor display module](https://github.com/ventilator-project/sensor_module)
 
