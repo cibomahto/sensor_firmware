@@ -31,6 +31,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "hp203b.h"
+#include "crc16_modbus.h"
 
 /* USER CODE END Includes */
 
@@ -162,8 +163,9 @@ int main(void)
         .vfb = vfb,
         .pressure = pressure,
         .temperature = temperature,
-        .crc = 0,   // TODO
+        .crc = 0,
     };
+    packet.crc = crc16_modbus((uint8_t *)&packet, sizeof(packet));
     HAL_UART_Transmit(&huart1, (uint8_t *)&packet, sizeof(packet), 0xFFFF);
 
     /* USER CODE END WHILE */
@@ -192,7 +194,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.HSI14CalibrationValue = 16;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
-  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL12;
+  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL4;
   RCC_OscInitStruct.PLL.PREDIV = RCC_PREDIV_DIV1;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
@@ -206,7 +208,7 @@ void SystemClock_Config(void)
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_1) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
   {
     Error_Handler();
   }
@@ -235,7 +237,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hdl)
     adc_ch_index = 0;
     //HAL_ADC_Stop(hdl);
     vdda = 3300 * (*VREFINT_CAL_ADDR) / adc_raw[1];
-    vfb = vdda * adc_raw[0] / 4095;
+    vfb = vdda * adc_raw[0] / 4095 * 2; // TODO: Add calibration for resistor divider
   }
 }
 

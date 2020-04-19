@@ -10,13 +10,17 @@ From a bare Ubuntu install:
     sudo apt upgrade
     sudo apt install build-essential git
 
-Optional tools:
-
-    sudo apt install vim dos2unix
-
 For serial debuggets, add the user to dialout:
 
     sudo usermod -a -G dialout matt
+
+For stm cube:
+
+    sudo apt install default-jre
+
+Optional tools:
+
+    sudo apt install vim dos2unix
 
 ## Getting a fixed compiler version
 
