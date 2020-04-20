@@ -28,6 +28,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+#include <math.h>
 #include <string.h>
 #include <stdio.h>
 #include "hp203b.h"
@@ -155,6 +156,15 @@ int main(void)
       temperature = 0;
       pressure = 0;
     }
+
+    // Calculate the wind speed given a linear fit
+    // pressure(l/m) = e^(a*vfb_v+b)
+    const double a = 3.32180798;
+    const double b = -11.27770646;
+
+    const double vfb_v = vfb/1000.0;
+    //const double af_lm = exp(a*vfb_v + b);
+    //const uint16_t af_mlm = round(af_lm*1000.0);	// Convert to ml/minute
 
     message_packet_t packet = {
         .SOF = 0x5555,

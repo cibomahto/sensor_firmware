@@ -20,7 +20,7 @@ TARGET = sensor_firmware
 # building variables
 ######################################
 # debug build?
-DEBUG = 1
+DEBUG = 0
 # optimization
 OPT = -Og
 
@@ -232,6 +232,9 @@ flash-bm: all
   -ex 'compare-sections' \
   -ex 'kill' \
   $(BUILD_DIR)/$(TARGET).elf
+
+size: all
+	arm-none-eabi-size $(BUILD_DIR)/$(TARGET).elf
 
 #######################################
 # dependencies
