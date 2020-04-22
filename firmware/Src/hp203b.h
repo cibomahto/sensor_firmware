@@ -10,6 +10,8 @@ typedef enum {
 
 hp203b_error_t hp203b_init();
 
+hp203b_error_t hp203b_start_read_temp_pressure();
+
 //! @brief Makes a blocking call to read the temperature and pressure.
 //!
 //! @param[out] temperature Current temperature (units?)

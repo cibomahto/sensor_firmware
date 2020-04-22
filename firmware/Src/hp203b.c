@@ -52,35 +52,36 @@ hp203b_error_t hp203b_init() {
   return HP203B_ERROR_OK;
 }
 
+hp203b_error_t hp203b_start_read_temp_pressure() {
+  HAL_StatusTypeDef ret;
+
+  // Make a fast conversion, then wait for a result
+  const uint8_t cmd[] = {HP203B_CMD_ADC_CVT(HP203B_ADC_OSR_128, HP203B_ADC_CHNL_P_T)};
+  ret = HAL_I2C_Master_Transmit(&hi2c1, HP203B_I2C_ADDR, cmd, sizeof(cmd), HAL_MAX_DELAY);
+  if ( ret != HAL_OK )
+    return HP203B_ERROR_COMMS;
+}
+  
 hp203b_error_t hp203b_read_temp_pressure(uint32_t *temperature, uint32_t *pressure) {
   HAL_StatusTypeDef ret;
 
-  {
-    // Make a fast conversion, then wait for a result
-    const uint8_t cmd[] = {HP203B_CMD_ADC_CVT(HP203B_ADC_OSR_128, HP203B_ADC_CHNL_P_T)};
-    ret = HAL_I2C_Master_Transmit(&hi2c1, HP203B_I2C_ADDR, cmd, sizeof(cmd), HAL_MAX_DELAY);
-    if ( ret != HAL_OK )
-      return HP203B_ERROR_COMMS;
+  // TODO: Check that the conversion was completed
 
-    HAL_Delay(4);
-  }
+  const uint8_t cmd[] = {HP203B_CMD_READ_PT};
+  ret = HAL_I2C_Master_Transmit(&hi2c1, HP203B_I2C_ADDR, cmd, sizeof(cmd), HAL_MAX_DELAY);
+  if ( ret != HAL_OK )
+    return HP203B_ERROR_COMMS;
 
-  {
-    const uint8_t cmd[] = {HP203B_CMD_READ_PT};
-    ret = HAL_I2C_Master_Transmit(&hi2c1, HP203B_I2C_ADDR, cmd, sizeof(cmd), HAL_MAX_DELAY);
-    if ( ret != HAL_OK )
-      return HP203B_ERROR_COMMS;
+  uint8_t buff[6];
+  ret = HAL_I2C_Master_Receive(&hi2c1, HP203B_I2C_ADDR, buff, sizeof(buff), HAL_MAX_DELAY);
+  if ( ret != HAL_OK )
+    return HP203B_ERROR_COMMS;
 
-    uint8_t buff[6];
-    ret = HAL_I2C_Master_Receive(&hi2c1, HP203B_I2C_ADDR, buff, sizeof(buff), HAL_MAX_DELAY);
-    if ( ret != HAL_OK )
-      return HP203B_ERROR_COMMS;
-
-    // First 3 bytes are temperature (TODO: sign extend this
-    *temperature = (buff[0] << 16) | (buff[1] << 8) | (buff[2]);
-    /// Next 3 bytes are pressure
-    *pressure = (buff[3] << 16) | (buff[4] << 8) | (buff[5]);
-  }
+  // First 3 bytes are temperature (TODO: sign extend this
+  *temperature = (buff[0] << 16) | (buff[1] << 8) | (buff[2]);
+  /// Next 3 bytes are pressure
+  *pressure = (buff[3] << 16) | (buff[4] << 8) | (buff[5]);
+  
 
   return HP203B_ERROR_OK;
 }

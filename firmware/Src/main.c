@@ -71,6 +71,7 @@ typedef struct {
     uint8_t version; // 0
     uint8_t type; // Packet type: 0
     uint16_t vfb; // ADC value
+    uint32_t airflow;
     uint32_t pressure;
     uint32_t temperature;
     uint16_t crc; // TODO
@@ -133,7 +134,13 @@ int main(void)
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
-  HAL_ADCEx_Calibration_Start(&hadc);
+//  HAL_ADCEx_Calibration_Start(&hadc);
+  LL_ADC_StartCalibration(ADC1);
+  while(LL_ADC_IsCalibrationOnGoing(ADC1)) {}
+
+  LL_ADC_Enable(ADC1);
+  while (LL_ADC_IsActiveFlag_ADRDY(ADC1) == 0)
+
 
   /* USER CODE END 2 */
 
@@ -146,31 +153,50 @@ int main(void)
   while (1)
   {
     // Start a (single? ADC conversion)
-    HAL_ADC_Start_IT(&hadc);
-    //HAL_Delay(2);
+//    HAL_ADC_Start_IT(&hadc);
+
+    if(hp203b_start_read_temp_pressure() != HP203B_ERROR_OK) {
+      // TODO error handling
+    }
+
+    // Sample the first two ADC channels:
+    // channel 0: Feedback voltage
+    // channel 1: Reference voltage
+    LL_ADC_REG_StartConversion(ADC1);
+
+    while (LL_ADC_IsActiveFlag_EOC(ADC1) == 0) {}
+    const uint16_t vdda_raw = LL_ADC_REG_ReadConversionData12(ADC1);
+
+    while (LL_ADC_IsActiveFlag_EOC(ADC1) == 0) {}
+    const uint16_t vref_raw = LL_ADC_REG_ReadConversionData12(ADC1);
+
+    adc_ch_index = 0;
+    //HAL_ADC_Stop(hdl);
+    vdda = 3300 * (*VREFINT_CAL_ADDR) / vref_raw;
+    vfb = vdda * vdda_raw / 4095 * 2; // TODO: Add calibration for resistor divider
 
     uint32_t temperature = 0;
     uint32_t pressure = 0;
+
     if(hp203b_read_temp_pressure(&temperature, &pressure) != HP203B_ERROR_OK) {
       // TODO: Errror handling
-      temperature = 0;
-      pressure = 0;
     }
 
     // Calculate the wind speed given a linear fit
     // pressure(l/m) = e^(a*vfb_v+b)
-    const double a = 3.32180798;
-    const double b = -11.27770646;
+    const double a = 3.4746;
+    const double b = -11.397;
 
     const double vfb_v = vfb/1000.0;
-    //const double af_lm = exp(a*vfb_v + b);
-    //const uint16_t af_mlm = round(af_lm*1000.0);	// Convert to ml/minute
+    const double af_lm = exp(a*vfb_v + b);
+    const uint16_t airflow = round(af_lm*100.0);	// Convert to l/minute * 100
 
     message_packet_t packet = {
         .SOF = 0x5555,
         .version = 0,
         .type = 0,
         .vfb = vfb,
+	.airflow = airflow,
         .pressure = pressure,
         .temperature = temperature,
         .crc = 0,
@@ -191,50 +217,62 @@ int main(void)
   */
 void SystemClock_Config(void)
 {
-  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
-  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
-  RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
+  LL_FLASH_SetLatency(LL_FLASH_LATENCY_0);
 
-  /** Initializes the CPU, AHB and APB busses clocks 
-  */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_HSI14;
-  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSI14State = RCC_HSI14_ON;
-  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.HSI14CalibrationValue = 16;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
-  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL4;
-  RCC_OscInitStruct.PLL.PREDIV = RCC_PREDIV_DIV1;
-  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  if(LL_FLASH_GetLatency() != LL_FLASH_LATENCY_0)
   {
-    Error_Handler();
+  Error_Handler();  
   }
-  /** Initializes the CPU, AHB and APB busses clocks 
-  */
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
-                              |RCC_CLOCKTYPE_PCLK1;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+  LL_RCC_HSI_Enable();
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+   /* Wait till HSI is ready */
+  while(LL_RCC_HSI_IsReady() != 1)
   {
-    Error_Handler();
+    
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USART1|RCC_PERIPHCLK_I2C1;
-  PeriphClkInit.Usart1ClockSelection = RCC_USART1CLKSOURCE_PCLK1;
-  PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_HSI;
-  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
+  LL_RCC_HSI_SetCalibTrimming(16);
+  LL_RCC_HSI14_Enable();
+
+   /* Wait till HSI14 is ready */
+  while(LL_RCC_HSI14_IsReady() != 1)
   {
-    Error_Handler();
+    
   }
+  LL_RCC_HSI14_SetCalibTrimming(16);
+  LL_RCC_PLL_ConfigDomain_SYS(LL_RCC_PLLSOURCE_HSI_DIV_2, LL_RCC_PLL_MUL_4);
+  LL_RCC_PLL_Enable();
+
+   /* Wait till PLL is ready */
+  while(LL_RCC_PLL_IsReady() != 1)
+  {
+    
+  }
+  LL_RCC_SetAHBPrescaler(LL_RCC_SYSCLK_DIV_1);
+  LL_RCC_SetAPB1Prescaler(LL_RCC_APB1_DIV_1);
+  LL_RCC_SetSysClkSource(LL_RCC_SYS_CLKSOURCE_PLL);
+
+   /* Wait till System clock is ready */
+  while(LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_PLL)
+  {
+  
+  }
+  LL_SetSystemCoreClock(16000000);
+
+   /* Update the time base */
+  if (HAL_InitTick (TICK_INT_PRIORITY) != HAL_OK)
+  {
+    Error_Handler();  
+  };
+  LL_RCC_HSI14_EnableADCControl();
+  LL_RCC_SetUSARTClockSource(LL_RCC_USART1_CLKSOURCE_PCLK1);
+  LL_RCC_SetI2CClockSource(LL_RCC_I2C1_CLKSOURCE_HSI);
 }
 
 /* USER CODE BEGIN 4 */
 
 // CH0 (adc_raw[0]) : ADC_IN5, this is VFB
 // CH1 (adc_raw[1]) : Vrefint
+/*
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hdl)
 {
   if (__HAL_ADC_GET_FLAG(hdl, ADC_FLAG_EOC))
@@ -250,7 +288,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hdl)
     vfb = vdda * adc_raw[0] / 4095 * 2; // TODO: Add calibration for resistor divider
   }
 }
-
+*/
 
 /* USER CODE END 4 */
 
