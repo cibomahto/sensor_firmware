@@ -184,11 +184,11 @@ int main(void)
 
     // Calculate the wind speed given a linear fit
     // pressure(l/m) = e^(a*vfb_v+b)
-    const double a = 3.4746;
-    const double b = -11.397;
+    const double p0 = 2.467;
+    const double p1 = -6.830;
 
     const double vfb_v = vfb/1000.0;
-    const double af_lm = exp(a*vfb_v + b);
+    const double af_lm = exp(p0*vfb_v + p1);
     const uint16_t airflow = round(af_lm*100.0);	// Convert to l/minute * 100
 
     message_packet_t packet = {
