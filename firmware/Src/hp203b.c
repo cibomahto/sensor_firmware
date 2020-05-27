@@ -62,7 +62,7 @@ hp203b_error_t hp203b_start_read_temp_pressure() {
     return HP203B_ERROR_COMMS;
 }
   
-hp203b_error_t hp203b_read_temp_pressure(uint32_t *temperature, uint32_t *pressure) {
+hp203b_error_t hp203b_read_temp_pressure(int32_t *temperature, uint32_t *pressure) {
   HAL_StatusTypeDef ret;
 
   // TODO: Check that the conversion was completed
@@ -77,8 +77,12 @@ hp203b_error_t hp203b_read_temp_pressure(uint32_t *temperature, uint32_t *pressu
   if ( ret != HAL_OK )
     return HP203B_ERROR_COMMS;
 
-  // First 3 bytes are temperature (TODO: sign extend this
-  *temperature = (buff[0] << 16) | (buff[1] << 8) | (buff[2]);
+  // First 3 bytes are temperature, TODO: test sign extension
+  if(buff[0] & 0b10000000)
+    *temperature = (0xFF << 24) | (buff[0] << 16) | (buff[1] << 8) | (buff[2]);
+  else
+    *temperature = (buff[0] << 16) | (buff[1] << 8) | (buff[2]);
+
   /// Next 3 bytes are pressure
   *pressure = (buff[3] << 16) | (buff[4] << 8) | (buff[5]);
   

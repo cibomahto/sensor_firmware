@@ -73,7 +73,7 @@ typedef struct {
     uint16_t vfb; // ADC value
     uint32_t airflow;
     uint32_t pressure;
-    uint32_t temperature;
+    int32_t temperature;
     uint16_t crc; // TODO
 } __attribute__((__packed__)) message_packet_t;
 
@@ -175,7 +175,7 @@ int main(void)
     vdda = 3300 * (*VREFINT_CAL_ADDR) / vref_raw;
     vfb = vdda * vdda_raw / 4095 * 2; // TODO: Add calibration for resistor divider
 
-    uint32_t temperature = 0;
+    int32_t temperature = 0;
     uint32_t pressure = 0;
 
     if(hp203b_read_temp_pressure(&temperature, &pressure) != HP203B_ERROR_OK) {
@@ -188,7 +188,10 @@ int main(void)
     const double p1 = -6.830;
 
     const double vfb_v = vfb/1000.0;
+
     const double af_lm = exp(p0*vfb_v + p1);
+
+
     const uint16_t airflow = round(af_lm*100.0);	// Convert to l/minute * 100
 
     message_packet_t packet = {

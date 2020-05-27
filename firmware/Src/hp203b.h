@@ -17,4 +17,4 @@ hp203b_error_t hp203b_start_read_temp_pressure();
 //! @param[out] temperature Current temperature (units?)
 //! @param[out] pressure Current pressure (units?)
 //! @return HP203B_ERROR_OK on success
-hp203b_error_t hp203b_read_temp_pressure(uint32_t *temperature, uint32_t *pressure);
+hp203b_error_t hp203b_read_temp_pressure(int32_t *temperature, uint32_t *pressure);
